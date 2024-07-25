@@ -20,11 +20,19 @@ class _EasyInfiniteDateTimeLineExampleState
 
   DateTime? _focusDate = DateTime.now();
 
+  var overOffsetDate = DateTime(2024,8,1);
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         EasyInfiniteDateTimeLine(
+          overOffsetDate: overOffsetDate,
+          onOverOffsetDate: (){
+              setState(() {
+                overOffsetDate = DateTime(2024,9,1);
+              });
+          },
           selectionMode: const SelectionMode.autoCenter(),
           controller: _controller,
           firstDate: DateTime(2024),

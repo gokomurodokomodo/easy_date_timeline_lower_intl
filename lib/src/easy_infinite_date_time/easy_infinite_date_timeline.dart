@@ -66,7 +66,17 @@ class EasyInfiniteDateTimeLine extends StatefulWidget {
     required this.firstDate,
     required this.focusDate,
     required this.lastDate,
+    this.onBackOverOffsetDate,
+    this.backOverOffsetDate,
+    this.onOverOffsetDate,
+    this.overOffsetDate
+
   });
+
+  final DateTime? overOffsetDate;
+  final DateTime? backOverOffsetDate;
+  final Function()? onOverOffsetDate;
+  final Function()? onBackOverOffsetDate;
 
   /// Represents the initial date for the timeline widget.
   /// This is the date that will be displayed as the first day in the timeline.
@@ -197,6 +207,10 @@ class _EasyInfiniteDateTimeLineState extends State<EasyInfiniteDateTimeLine> {
             height: 12.0,
           ),
         InfiniteTimeLineWidget(
+          onBackOverOffsetDay: widget.onBackOverOffsetDate,
+          onOverOffsetDay: widget.onOverOffsetDate,
+          overOffsetDay: widget.overOffsetDate,
+          backOverOffsetDay: widget.backOverOffsetDate,
           controller: widget.controller,
           firstDate: widget.firstDate,
           lastDate: widget.lastDate,

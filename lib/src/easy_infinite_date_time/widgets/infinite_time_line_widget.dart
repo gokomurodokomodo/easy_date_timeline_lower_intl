@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:jiffy/jiffy.dart';
 import '../../properties/properties.dart';
 import '../../utils/utils.dart';
 import '../../widgets/easy_day_widget/easy_day_widget.dart';
@@ -8,23 +8,27 @@ import 'web_scroll_behavior.dart';
 part 'easy_infinite_date_timeline_controller.dart';
 
 class InfiniteTimeLineWidget extends StatefulWidget {
-  InfiniteTimeLineWidget({
-    super.key,
-    this.inactiveDates,
-    this.dayProps = const EasyDayProps(),
-    this.locale = "en_US",
-    this.timeLineProps = const EasyTimeLineProps(),
-    this.onDateChange,
-    this.itemBuilder,
-    this.physics,
-    this.controller,
-    required this.firstDate,
-    required this.focusedDate,
-    required this.activeDayTextColor,
-    required this.activeDayColor,
-    required this.lastDate,
-    required this.selectionMode,
-  })  : assert(timeLineProps.hPadding > -1,
+  InfiniteTimeLineWidget(
+      {super.key,
+      this.inactiveDates,
+      this.dayProps = const EasyDayProps(),
+      this.locale = "en_US",
+      this.timeLineProps = const EasyTimeLineProps(),
+      this.onDateChange,
+      this.itemBuilder,
+      this.physics,
+      this.controller,
+      required this.firstDate,
+      required this.focusedDate,
+      required this.activeDayTextColor,
+      required this.activeDayColor,
+      required this.lastDate,
+      required this.selectionMode,
+      this.overOffsetDay,
+      this.backOverOffsetDay,
+      this.onOverOffsetDay,
+      this.onBackOverOffsetDay})
+      : assert(timeLineProps.hPadding > -1,
             "Can't set timeline hPadding less than zero."),
         assert(timeLineProps.separatorPadding > -1,
             "Can't set timeline separatorPadding less than zero."),
@@ -97,6 +101,15 @@ class InfiniteTimeLineWidget extends StatefulWidget {
 
   final ScrollPhysics? physics;
 
+  ///datetime for calculating over offset
+  final DateTime? overOffsetDay;
+
+  ///date time for min over offset day
+  final DateTime? backOverOffsetDay;
+
+  final Function()? onOverOffsetDay;
+  final Function()? onBackOverOffsetDay;
+
   @override
   State<InfiniteTimeLineWidget> createState() => _InfiniteTimeLineWidgetState();
 }
@@ -130,14 +143,57 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
   /// The extent of each item in the infinite timeline widget.
   double _itemExtend = 0.0;
 
+  DateTime currentTime = DateTime.now();
+  DateTime overOffsetDay = DateTime.now();
+  DateTime overBackOffsetDay = DateTime(1999);
+  final GlobalKey _extendList = GlobalKey();
+
+  void setOverOffsetDay(DateTime currentTime) {
+    setState(() {
+      overOffsetDay = DateTime(currentTime.year, currentTime.month, 1);
+    });
+  }
+
+  void setOverBackOffsetDay(DateTime currentTime) {
+    print(Jiffy.parseFromDateTime(currentTime).daysInMonth);
+    setState(() {
+      overBackOffsetDay = DateTime(currentTime.year, currentTime.month,
+          Jiffy.parseFromDateTime(currentTime).daysInMonth - 2);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _initItemExtend();
     _attachEasyController();
+    setOverOffsetDay(Jiffy.now().add(months: 1).dateTime);
+    setOverBackOffsetDay(Jiffy.now().subtract(months: 1).dateTime);
     _daysCount =
         EasyDateUtils.calculateDaysCount(widget.firstDate, widget.lastDate);
-    _controller = ScrollController();
+    _controller = ScrollController(onAttach: (scrollPosition) {});
+    _controller.addListener(() {
+      print('overOffsetDay : ${calculateOverOffset(overOffsetDay)}');
+      print('backOverOffsetDay : ${calculateOverOffset(overBackOffsetDay)}');
+      print('controllerOffset : ${_controller.offset})');
+      print('================================================================');
+      if (_controller.offset > calculateOverOffset(overOffsetDay)) {
+        print('over offset');
+        setOverOffsetDay(
+            Jiffy.parseFromDateTime(overOffsetDay).add(months: 1).dateTime);
+        setOverBackOffsetDay(
+            Jiffy.parseFromDateTime(overBackOffsetDay).add(months: 1).dateTime);
+        widget.onOverOffsetDay?.call();
+      } else if (_controller.offset < calculateOverOffset(overBackOffsetDay)) {
+        print('back over offset');
+        setOverOffsetDay(
+            Jiffy.parseFromDateTime(overOffsetDay).subtract(months: 1).dateTime);
+        setOverBackOffsetDay(Jiffy.parseFromDateTime(overBackOffsetDay)
+            .subtract(months: 1)
+            .dateTime);
+        widget.onBackOverOffsetDay?.call();
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToInitialOffset());
   }
 
@@ -211,6 +267,7 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
                 vertical: _timeLineProps.vPadding,
               ),
               sliver: SliverFixedExtentList.builder(
+                key: _extendList,
                 itemExtent: _itemExtend,
                 itemBuilder: (context, index) {
                   /// Adds a duration of [index] days to the [firstDate] and assigns the result to [currentDate].
@@ -308,6 +365,29 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
   /// If [lastDate] is not provided, it falls back to [widget.focusedDate].
   ///
   /// Returns the calculated scroll offset.
+
+  ///Get the next and prev month scroll offset to check if scroll controller passed offset or not. Mainly for change month
+  double calculateOverOffset([DateTime? lastDate]) {
+    // Get the last date to use, defaulting to widget.focusedDate if not provided
+    final effectiveLastDate = lastDate ?? widget.focusedDate;
+
+    // Check if a date is provided
+    if (effectiveLastDate != null) {
+      final scrollHelper = InfiniteTimelineScrollHelper(
+        firstDate: widget.firstDate,
+        lastDate: effectiveLastDate,
+        dayWidth: _itemExtend,
+        maxScrollExtent: _controller.position.maxScrollExtent,
+        screenWidth: _controller.position.viewportDimension,
+      );
+      // Use a switch expression to determine the scroll offset based on the selection mode
+      return scrollHelper.getScrollPositionForFirstDate();
+    } else {
+      // If no date is provided, return 0.0 as the scroll offset
+      return 0.0;
+    }
+  }
+
   double _getScrollOffset([DateTime? lastDate]) {
     // Get the last date to use, defaulting to widget.focusedDate if not provided
     final effectiveLastDate = lastDate ?? widget.focusedDate;

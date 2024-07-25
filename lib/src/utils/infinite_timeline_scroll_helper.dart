@@ -29,6 +29,23 @@ final class InfiniteTimelineScrollHelper {
   /// The width of the screen.
   final double screenWidth;
 
+  double getScrollPositionForLastDate() {
+    // Calculate the number of days between the first and last dates
+    final dayIndex = lastDate.difference(firstDate).inDays;
+
+    // Calculate the target scroll position to place the first date at the
+    // leftmost position
+    final targetScrollPosition = dayIndex * dayWidth;
+
+    // Check if the target scroll position is within the valid range
+    final canApplyAutoFirst = targetScrollPosition <= maxScrollExtent;
+
+    // Calculate and return the horizontal offset to place the first date at
+    // the leftmost position. If the target scroll position is out of range,
+    // return the maximum scroll extent.
+    return canApplyAutoFirst ? targetScrollPosition : maxScrollExtent;
+  }
+
   /// Calculates the scroll position to place the selected date at the leftmost
   /// position of the timeline.
   ///
