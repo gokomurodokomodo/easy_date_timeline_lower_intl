@@ -178,14 +178,14 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
       // print('controllerOffset : ${_controller.offset})');
       // print('================================================================');
       if (_controller.offset > calculateOverOffset(overOffsetDay)) {
-        // print('over offset');
+        print('over offset');
         setOverOffsetDay(
             Jiffy.parseFromDateTime(overOffsetDay).add(months: 1).dateTime);
         setOverBackOffsetDay(
             Jiffy.parseFromDateTime(overBackOffsetDay).add(months: 1).dateTime);
         widget.onOverOffsetDay?.call();
       } else if (_controller.offset < calculateOverOffset(overBackOffsetDay)) {
-        // print('back over offset');
+        print('back over offset');
         setOverOffsetDay(
             Jiffy.parseFromDateTime(overOffsetDay).subtract(months: 1).dateTime);
         setOverBackOffsetDay(Jiffy.parseFromDateTime(overBackOffsetDay)
