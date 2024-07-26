@@ -14,6 +14,15 @@ class EasyInfiniteDateTimelineController {
     _infiniteTimeLineState?.setShouldCatchOverOrBackOverBehavior(value);
   }
 
+
+  void setOverOffsetDay(DateTime currentMonth){
+    _infiniteTimeLineState?.setOverOffsetDay(currentMonth);
+  }
+
+  void setBackOverOffsetDay(DateTime currentMonth){
+    _infiniteTimeLineState?.setOverBackOffsetDay(currentMonth);
+  }
+
   /// Detaches the controller from the EasyInfiniteDateTimeline state.
   void _detachEasyDateState() {
     _infiniteTimeLineState = null;
