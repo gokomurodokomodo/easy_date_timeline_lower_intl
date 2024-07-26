@@ -147,6 +147,13 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
   DateTime overOffsetDay = DateTime.now();
   DateTime overBackOffsetDay = DateTime(1999);
   final GlobalKey _extendList = GlobalKey();
+  var shouldCatchOverOrBackOverBehavior = true;
+
+  void setShouldCatchOverOrBackOverBehavior(bool value){
+    setState(() {
+      shouldCatchOverOrBackOverBehavior = value;
+    });
+  }
 
   void setOverOffsetDay(DateTime currentTime) {
     setState(() {
@@ -177,21 +184,26 @@ class _InfiniteTimeLineWidgetState extends State<InfiniteTimeLineWidget> {
       // print('backOverOffsetDay : ${calculateOverOffset(overBackOffsetDay)}');
       // print('controllerOffset : ${_controller.offset})');
       // print('================================================================');
-      if (_controller.offset > calculateOverOffset(overOffsetDay)) {
-        print('over offset');
-        setOverOffsetDay(
-            Jiffy.parseFromDateTime(overOffsetDay).add(months: 1).dateTime);
-        setOverBackOffsetDay(
-            Jiffy.parseFromDateTime(overBackOffsetDay).add(months: 1).dateTime);
-        widget.onOverOffsetDay?.call();
-      } else if (_controller.offset < calculateOverOffset(overBackOffsetDay)) {
-        print('back over offset');
-        setOverOffsetDay(
-            Jiffy.parseFromDateTime(overOffsetDay).subtract(months: 1).dateTime);
-        setOverBackOffsetDay(Jiffy.parseFromDateTime(overBackOffsetDay)
-            .subtract(months: 1)
-            .dateTime);
-        widget.onBackOverOffsetDay?.call();
+      if(shouldCatchOverOrBackOverBehavior){
+        if (_controller.offset > calculateOverOffset(overOffsetDay)) {
+          print('over offset');
+          setOverOffsetDay(
+              Jiffy.parseFromDateTime(overOffsetDay).add(months: 1).dateTime);
+          setOverBackOffsetDay(Jiffy.parseFromDateTime(overBackOffsetDay)
+              .add(months: 1)
+              .dateTime);
+          widget.onOverOffsetDay?.call();
+        } else if (_controller.offset <
+            calculateOverOffset(overBackOffsetDay)) {
+          print('back over offset');
+          setOverOffsetDay(Jiffy.parseFromDateTime(overOffsetDay)
+              .subtract(months: 1)
+              .dateTime);
+          setOverBackOffsetDay(Jiffy.parseFromDateTime(overBackOffsetDay)
+              .subtract(months: 1)
+              .dateTime);
+          widget.onBackOverOffsetDay?.call();
+        }
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToInitialOffset());

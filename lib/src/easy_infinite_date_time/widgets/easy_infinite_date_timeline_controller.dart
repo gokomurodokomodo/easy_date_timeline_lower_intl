@@ -10,6 +10,10 @@ class EasyInfiniteDateTimelineController {
     _infiniteTimeLineState = state;
   }
 
+  void changeScrollBehavior(bool value){
+    _infiniteTimeLineState?.setShouldCatchOverOrBackOverBehavior(value);
+  }
+
   /// Detaches the controller from the EasyInfiniteDateTimeline state.
   void _detachEasyDateState() {
     _infiniteTimeLineState = null;
